@@ -38,24 +38,21 @@ pipeline {
                     steps {
                         sh """
                             mkdir -p reports
-                            chmod -R 777 reports
                             docker run --rm \
                               -v /var/run/docker.sock:/var/run/docker.sock \
                               -v trivy-cache:/root/.cache/ \
-                              -v \"${WORKSPACE}/reports\":/reports aquasec/trivy:latest image \
+                              aquasec/trivy:latest image \
                               --timeout 15m --scanners vuln \
                               --format template --template "@contrib/html.tpl" \
-                              --output /reports/trivy-php-report.html app-php:${BUILD_NUMBER} || true
+                              app-php:${BUILD_NUMBER} > reports/trivy-php-report.html || true
 
                             docker run --rm \
                               -v /var/run/docker.sock:/var/run/docker.sock \
                               -v trivy-cache:/root/.cache/ \
-                              -v \"${WORKSPACE}/reports\":/reports aquasec/trivy:latest image \
+                              aquasec/trivy:latest image \
                               --timeout 15m --scanners vuln \
                               --format json \
-                              --output /reports/trivy-php-report.json app-php:${BUILD_NUMBER} || true
-
-                            chmod -R 777 reports
+                              app-php:${BUILD_NUMBER} > reports/trivy-php-report.json || true
                         """
                     }
                 }
@@ -63,24 +60,21 @@ pipeline {
                     steps {
                         sh """
                             mkdir -p reports
-                            chmod -R 777 reports
                             docker run --rm \
                               -v /var/run/docker.sock:/var/run/docker.sock \
                               -v trivy-cache:/root/.cache/ \
-                              -v \"${WORKSPACE}/reports\":/reports aquasec/trivy:latest image \
+                              aquasec/trivy:latest image \
                               --timeout 15m --scanners vuln \
                               --format template --template "@contrib/html.tpl" \
-                              --output /reports/trivy-java-report.html app-java:${BUILD_NUMBER} || true
+                              app-java:${BUILD_NUMBER} > reports/trivy-java-report.html || true
 
                             docker run --rm \
                               -v /var/run/docker.sock:/var/run/docker.sock \
                               -v trivy-cache:/root/.cache/ \
-                              -v \"${WORKSPACE}/reports\":/reports aquasec/trivy:latest image \
+                              aquasec/trivy:latest image \
                               --timeout 15m --scanners vuln \
                               --format json \
-                              --output /reports/trivy-java-report.json app-java:${BUILD_NUMBER} || true
-
-                            chmod -R 777 reports
+                              app-java:${BUILD_NUMBER} > reports/trivy-java-report.json || true
                         """
                     }
                 }
@@ -88,30 +82,27 @@ pipeline {
                     steps {
                         sh """
                             mkdir -p reports
-                            chmod -R 777 reports
                             docker run --rm \
                               -v /var/run/docker.sock:/var/run/docker.sock \
                               -v trivy-cache:/root/.cache/ \
-                              -v \"${WORKSPACE}/reports\":/reports aquasec/trivy:latest image \
+                              aquasec/trivy:latest image \
                               --timeout 15m --scanners vuln \
                               --format template --template "@contrib/html.tpl" \
-                              --output /reports/trivy-python-report.html app-python:${BUILD_NUMBER} || true
+                              app-python:${BUILD_NUMBER} > reports/trivy-python-report.html || true
 
                             docker run --rm \
                               -v /var/run/docker.sock:/var/run/docker.sock \
                               -v trivy-cache:/root/.cache/ \
-                              -v \"${WORKSPACE}/reports\":/reports aquasec/trivy:latest image \
+                              aquasec/trivy:latest image \
                               --timeout 15m --scanners vuln \
                               --format json \
-                              --output /reports/trivy-python-report.json app-python:${BUILD_NUMBER} || true
-
-                            chmod -R 777 reports
+                              app-python:${BUILD_NUMBER} > reports/trivy-python-report.json || true
                         """
                     }
                 }
             }
         }
-    }
+    }    
     post {
         always {
             archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
