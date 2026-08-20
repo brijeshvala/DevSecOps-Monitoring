@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = 'multi-lang-app'
-        IMAGE_NAME = "myorg/${APP_NAME}:${BUILD_NUMBER}"
+        APP_NAME = 'devsecops-suite'
         SLACK_WEBHOOK = 'https://hooks.slack.com/services/YOUR/WEBHOOK/HERE'
     }
 
@@ -11,7 +10,6 @@ pipeline {
         stage('1. Secret Scanning (Gitleaks)') {
             steps {
                 script {
-                    // Added double quotes around "$(pwd)"
                     def status = sh(
                         script: 'docker run --rm -v "$(pwd)":/path zricethezav/gitleaks:latest detect --source="/path" -v',
                         returnStatus: true
@@ -24,10 +22,9 @@ pipeline {
             }
         }
 
-        stage('2. Multi-Stack Dependency Scan (Trivy SCA)') {
+        stage('2. Multi-Stack SCA Scan (Trivy)') {
             steps {
                 script {
-                    // Added double quotes around "$(pwd)"
                     def status = sh(
                         script: 'docker run --rm -v "$(pwd)":/root/src aquasec/trivy:latest fs --severity HIGH,CRITICAL --exit-code 1 /root/src',
                         returnStatus: true
@@ -40,22 +37,41 @@ pipeline {
             }
         }
 
-        stage('3. Build Container Image') {
-            steps {
-                sh 'docker build -t ${IMAGE_NAME} .'
+        stage('3. Build Containers Parallel') {
+            parallel {
+                stage('Build PHP') {
+                    steps {
+                        sh 'docker build -t app-php:${BUILD_NUMBER} ./PHP'
+                    }
+                }
+                stage('Build Java') {
+                    steps {
+                        sh 'docker build -t app-java:${BUILD_NUMBER} "./Java (Maven, Spring Boot)"'
+                    }
+                }
+                stage('Build Python') {
+                    steps {
+                        sh 'docker build -t app-python:${BUILD_NUMBER} "./Python (Flask, FastAPI)"'
+                    }
+                }
             }
         }
 
-        stage('4. Container Image Scan (Trivy Image)') {
-            steps {
-                script {
-                    def status = sh(
-                        script: 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity CRITICAL --exit-code 1 ${IMAGE_NAME}',
-                        returnStatus: true
-                    )
-                    if (status != 0) {
-                        sh './notify.sh FAILURE "Container Image Scan" "Critical vulnerabilities in OS packages!"'
-                        error("Container scanning security gate failed!")
+        stage('4. Scan Built Images (Trivy)') {
+            parallel {
+                stage('Scan PHP Image') {
+                    steps {
+                        sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity CRITICAL --exit-code 1 app-php:${BUILD_NUMBER}'
+                    }
+                }
+                stage('Scan Java Image') {
+                    steps {
+                        sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity CRITICAL --exit-code 1 app-java:${BUILD_NUMBER}'
+                    }
+                }
+                stage('Scan Python Image') {
+                    steps {
+                        sh 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity CRITICAL --exit-code 1 app-python:${BUILD_NUMBER}'
                     }
                 }
             }
@@ -64,10 +80,10 @@ pipeline {
 
     post {
         success {
-            sh './notify.sh SUCCESS "All DevSecOps Gates Passed" "Image ${IMAGE_NAME} verified safe to deploy."'
+            sh './notify.sh SUCCESS "DevSecOps Pipeline" "All multi-stack images built and verified safe!"'
         }
         failure {
-            echo "Pipeline halted due to security policy violations."
+            echo "Pipeline failed due to build errors or security policy violations."
         }
     }
 }
