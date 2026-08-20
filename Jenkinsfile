@@ -41,22 +41,28 @@ pipeline {
             parallel {
                 stage('Build PHP') {
                     steps {
-                        sh 'docker build -t app-php:${BUILD_NUMBER} ./PHP'
+                        dir('PHP') {
+                            sh 'docker build -t app-php:${BUILD_NUMBER} .'
+                        }
                     }
                 }
                 stage('Build Java') {
                     steps {
-                        sh 'docker build -t app-java:${BUILD_NUMBER} "${WORKSPACE}/Java (Maven, Spring Boot)"'
+                        dir('Java (Maven, Spring Boot)') {
+                            sh 'docker build -t app-java:${BUILD_NUMBER} .'
+                        }
                     }
                 }
                 stage('Build Python') {
                     steps {
-                        sh 'docker build -t app-python:${BUILD_NUMBER} "${WORKSPACE}/Python (Flask, FastAPI)"'
+                        dir('Python (Flask, FastAPI)') {
+                            sh 'docker build -t app-python:${BUILD_NUMBER} .'
+                        }
                     }
                 }
             }
         }
-
+        
         stage('4. Scan Built Images (Trivy)') {
             parallel {
                 stage('Scan PHP Image') {
