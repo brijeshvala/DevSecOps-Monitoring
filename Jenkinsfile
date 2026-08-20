@@ -124,8 +124,7 @@ pipeline {
 }
     post {
         always {
-            archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
-        }
+                archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true        }
         success {
             sh './notify.sh SUCCESS "DevSecOps Pipeline" "All multi-stack images built and verified safe!"'
         }
