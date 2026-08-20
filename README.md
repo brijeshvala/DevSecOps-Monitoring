@@ -1,4 +1,5 @@
 🛡️ DevSecOps & Security Automation Pipeline
+
 An enterprise-ready DevSecOps CI/CD pipeline built with Jenkins and Trivy. This project demonstrates end-to-end container security automation across a multi-technology microservices architecture (PHP, Java Spring Boot, and Python Flask/FastAPI), running parallel builds, vulnerability scanning, and artifact archiving.
 
 🏗️ Architecture Overview
