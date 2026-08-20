@@ -38,9 +38,11 @@ pipeline {
         }
 
         stage('3. Build Containers Parallel') {
+            options {
+                // Allows all parallel branches to run to completion even if one fails
+                parallelsAlwaysFailFast(false)
+            }
             parallel {
-                failFast false
-
                 stage('Build PHP') {
                     steps {
                         dir('PHP') {
