@@ -62,7 +62,6 @@ pipeline {
                 }
             }
         }
-
         stage('4. Scan Built Images (Trivy)') {
             parallel {
                 stage('Scan PHP Image') {
@@ -121,9 +120,7 @@ pipeline {
                 }
             }
         }
-    } 
-}
-   
+        
     post {
         always {
             archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
