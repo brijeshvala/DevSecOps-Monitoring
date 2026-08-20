@@ -46,13 +46,14 @@ pipeline {
                         }
                     }
                 }
+                
                 stage('Build Java') {
                     steps {
-                        dir('Java (Maven, Spring Boot)') {
-                            sh 'docker build -t app-java:${BUILD_NUMBER} .'
-                        }
+                             dir('Java (Maven, Spring Boot)/app') {
+                                sh 'docker build -t app-java:${BUILD_NUMBER} .'
+                                 }
+                             }
                     }
-                }
                 stage('Build Python') {
                     steps {
                         dir('Python (Flask, FastAPI)') {
