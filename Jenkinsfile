@@ -36,68 +36,64 @@ pipeline {
             parallel {
                 stage('Scan PHP Image') {
                     steps {
-                        script {
-                            sh """
-                                mkdir -p reports
-                                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v "${WORKSPACE}/reports":/reports aquasec/trivy:latest image \
-                                  --timeout 15m --scanners vuln \
-                                  --format template --template "@contrib/html.tpl" \
-                                  --output /reports/trivy-php-report.html app-php:${BUILD_NUMBER} || true
+                        sh '''
+                            mkdir -p reports
+                            chmod 777 reports
+                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                              -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                              --timeout 15m --scanners vuln \
+                              --format template --template "@contrib/html.tpl" \
+                              --output /reports/trivy-php-report.html app-php:${BUILD_NUMBER}
 
-                                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v "${WORKSPACE}/reports":/reports aquasec/trivy:latest image \
-                                  --timeout 15m --scanners vuln \
-                                  --format json \
-                                  --output /reports/trivy-php-report.json app-php:${BUILD_NUMBER} || true
-                            """
-                        }
+                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                              -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                              --timeout 15m --scanners vuln \
+                              --format json \
+                              --output /reports/trivy-php-report.json app-php:${BUILD_NUMBER}
+                        '''
                     }
                 }
                 stage('Scan Java Image') {
                     steps {
-                        script {
-                            sh """
-                                mkdir -p reports
-                                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v "${WORKSPACE}/reports":/reports aquasec/trivy:latest image \
-                                  --timeout 15m --scanners vuln \
-                                  --format template --template "@contrib/html.tpl" \
-                                  --output /reports/trivy-java-report.html app-java:${BUILD_NUMBER} || true
+                        sh '''
+                            mkdir -p reports
+                            chmod 777 reports
+                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                              -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                              --timeout 15m --scanners vuln \
+                              --format template --template "@contrib/html.tpl" \
+                              --output /reports/trivy-java-report.html app-java:${BUILD_NUMBER}
 
-                                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v "${WORKSPACE}/reports":/reports aquasec/trivy:latest image \
-                                  --timeout 15m --scanners vuln \
-                                  --format json \
-                                  --output /reports/trivy-java-report.json app-java:${BUILD_NUMBER} || true
-                            """
-                        }
+                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                              -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                              --timeout 15m --scanners vuln \
+                              --format json \
+                              --output /reports/trivy-java-report.json app-java:${BUILD_NUMBER}
+                        '''
                     }
                 }
                 stage('Scan Python Image') {
                     steps {
-                        script {
-                            sh """
-                                mkdir -p reports
-                                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v "${WORKSPACE}/reports":/reports aquasec/trivy:latest image \
-                                  --timeout 15m --scanners vuln \
-                                  --format template --template "@contrib/html.tpl" \
-                                  --output /reports/trivy-python-report.html app-python:${BUILD_NUMBER} || true
+                        sh '''
+                            mkdir -p reports
+                            chmod 777 reports
+                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                              -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                              --timeout 15m --scanners vuln \
+                              --format template --template "@contrib/html.tpl" \
+                              --output /reports/trivy-python-report.html app-python:${BUILD_NUMBER}
 
-                                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v "${WORKSPACE}/reports":/reports aquasec/trivy:latest image \
-                                  --timeout 15m --scanners vuln \
-                                  --format json \
-                                  --output /reports/trivy-python-report.json app-python:${BUILD_NUMBER} || true
-                            """
-                        }
+                            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                              -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                              --timeout 15m --scanners vuln \
+                              --format json \
+                              --output /reports/trivy-python-report.json app-python:${BUILD_NUMBER}
+                        '''
                     }
                 }
             }
         }
     }
-
     post {
         always {
             archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
