@@ -120,7 +120,7 @@ pipeline {
                 }
             }
         }
-        
+
     post {
         always {
             archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
@@ -132,4 +132,3 @@ pipeline {
             echo "Pipeline failed due to build errors or security policy violations."
         }
     }
-}
