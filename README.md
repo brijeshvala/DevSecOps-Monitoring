@@ -1,4 +1,5 @@
 ⚡ DevSecOps Pipeline & Security Command Center
+
 An automated, multi-stack DevSecOps pipeline that turns code into scanned, production-ready container images. Built with Jenkins and Aqua Security Trivy, this workflow executes concurrent multi-language container builds (PHP, Java Spring Boot, Python Flask/FastAPI), performs deep vulnerability scanning, caches vulnerability databases dynamically, and archives security reports.
 
 ## 🛠️ Tech Stack & Tools
