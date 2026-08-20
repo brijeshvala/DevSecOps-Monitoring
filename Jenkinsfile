@@ -120,7 +120,8 @@ pipeline {
                 }
             }
         }
-
+    }
+}
     post {
         always {
             archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
