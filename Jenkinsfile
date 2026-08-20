@@ -39,6 +39,8 @@ pipeline {
 
         stage('3. Build Containers Parallel') {
             parallel {
+                failFast false
+
                 stage('Build PHP') {
                     steps {
                         dir('PHP') {
@@ -46,14 +48,13 @@ pipeline {
                         }
                     }
                 }
-                
                 stage('Build Java') {
                     steps {
-                             dir('Java (Maven, Spring Boot)/app') {
-                                sh 'docker build -t app-java:${BUILD_NUMBER} .'
-                                 }
-                             }
+                        dir('Java (Maven, Spring Boot)') {
+                            sh 'docker build -t app-java:${BUILD_NUMBER} .'
+                        }
                     }
+                }
                 stage('Build Python') {
                     steps {
                         dir('Python (Flask, FastAPI)') {
@@ -63,62 +64,60 @@ pipeline {
                 }
             }
         }
-        
+
         stage('4. Scan Built Images (Trivy)') {
             parallel {
                 stage('Scan PHP Image') {
                     steps {
                         script {
-                            sh '''
+                            sh """
                                 mkdir -p reports
-                                # Generate HTML report
                                 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                                  -v "\$(pwd)/reports":/reports aquasec/trivy:latest image \
                                   --format template --template "@contrib/html.tpl" \
                                   --output /reports/trivy-php-report.html app-php:${BUILD_NUMBER} || true
 
-                                # Generate JSON report
                                 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                                  -v "\$(pwd)/reports":/reports aquasec/trivy:latest image \
                                   --format json \
                                   --output /reports/trivy-php-report.json app-php:${BUILD_NUMBER} || true
-                            '''
+                            """
                         }
                     }
                 }
                 stage('Scan Java Image') {
                     steps {
                         script {
-                            sh '''
+                            sh """
                                 mkdir -p reports
                                 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                                  -v "\$(pwd)/reports":/reports aquasec/trivy:latest image \
                                   --format template --template "@contrib/html.tpl" \
                                   --output /reports/trivy-java-report.html app-java:${BUILD_NUMBER} || true
 
                                 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                                  -v "\$(pwd)/reports":/reports aquasec/trivy:latest image \
                                   --format json \
                                   --output /reports/trivy-java-report.json app-java:${BUILD_NUMBER} || true
-                            '''
+                            """
                         }
                     }
                 }
                 stage('Scan Python Image') {
                     steps {
                         script {
-                            sh '''
+                            sh """
                                 mkdir -p reports
                                 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                                  -v "\$(pwd)/reports":/reports aquasec/trivy:latest image \
                                   --format template --template "@contrib/html.tpl" \
                                   --output /reports/trivy-python-report.html app-python:${BUILD_NUMBER} || true
 
                                 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                                  -v $(pwd)/reports:/reports aquasec/trivy:latest image \
+                                  -v "\$(pwd)/reports":/reports aquasec/trivy:latest image \
                                   --format json \
                                   --output /reports/trivy-python-report.json app-python:${BUILD_NUMBER} || true
-                            '''
+                            """
                         }
                     }
                 }
@@ -128,18 +127,7 @@ pipeline {
 
     post {
         always {
-            // Store HTML and JSON reports on the Jenkins server build page
             archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
-
-            // Publish as formatted HTML tab if the HTML Publisher plugin is installed
-            publishHTML(target: [
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'reports',
-                reportFiles: 'trivy-php-report.html, trivy-java-report.html, trivy-python-report.html',
-                reportName: 'Trivy Vulnerability Security Reports'
-            ])
         }
         success {
             sh './notify.sh SUCCESS "DevSecOps Pipeline" "All multi-stack images built and verified safe!"'
@@ -148,113 +136,4 @@ pipeline {
             echo "Pipeline failed due to build errors or security policy violations."
         }
     }
-    post {
-        always {
-            // Store HTML and JSON reports on the Jenkins server build page
-            archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
-
-            // Publish as formatted HTML tab if the HTML Publisher plugin is installed
-            publishHTML(target: [
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'reports',
-                reportFiles: 'trivy-php-report.html, trivy-java-report.html, trivy-python-report.html',
-                reportName: 'Trivy Vulnerability Security Reports'
-            ])
-        }
-        success {
-            sh './notify.sh SUCCESS "DevSecOps Pipeline" "All multi-stack images built and verified safe!"'
-        }
-        failure {
-            echo "Pipeline failed due to build errors or security policy violations."
-        }
-    }
-    post {
-        always {
-            // Store HTML and JSON reports on the Jenkins server build page
-            archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
-
-            // Publish as formatted HTML tab if the HTML Publisher plugin is installed
-            publishHTML(target: [
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'reports',
-                reportFiles: 'trivy-php-report.html, trivy-java-report.html, trivy-python-report.html',
-                reportName: 'Trivy Vulnerability Security Reports'
-            ])
-        }
-        success {
-            sh './notify.sh SUCCESS "DevSecOps Pipeline" "All multi-stack images built and verified safe!"'
-        }
-        failure {
-            echo "Pipeline failed due to build errors or security policy violations."
-        }
-    }notify.sh SUCCESS "DevSecOps Pipeline" "All multi-stack images built and verified safe!"'
-    post {
-        always {
-            // Store HTML and JSON reports on the Jenkins server build page
-            archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
-
-            // Publish as formatted HTML tab if the HTML Publisher plugin is installed
-            publishHTML(target: [
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'reports',
-                reportFiles: 'trivy-php-report.html, trivy-java-report.html, trivy-python-report.html',
-                reportName: 'Trivy Vulnerability Security Reports'
-            ])
-        }
-        success {
-            sh './notify.sh SUCCESS "DevSecOps Pipeline" "All multi-stack images built and verified safe!"'
-        }
-        failure {
-            echo "Pipeline failed due to build errors or security policy violations."
-        }
-    }
-    post {
-        always {
-            // Store HTML and JSON reports on the Jenkins server build page
-            archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
-
-            // Publish as formatted HTML tab if the HTML Publisher plugin is installed
-            publishHTML(target: [
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'reports',
-                reportFiles: 'trivy-php-report.html, trivy-java-report.html, trivy-python-report.html',
-                reportName: 'Trivy Vulnerability Security Reports'
-            ])
-        }
-        success {
-            sh './notify.sh SUCCESS "DevSecOps Pipeline" "All multi-stack images built and verified safe!"'
-        }
-        failure {
-            echo "Pipeline failed due to build errors or security policy violations."
-        }
-    } failed due to build errors or security policy violations."
-    post {
-        always {
-            // Store HTML and JSON reports on the Jenkins server build page
-            archiveArtifacts artifacts: 'reports/*.html, reports/*.json', allowEmptyArchive: true
-
-            // Publish as formatted HTML tab if the HTML Publisher plugin is installed
-            publishHTML(target: [
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'reports',
-                reportFiles: 'trivy-php-report.html, trivy-java-report.html, trivy-python-report.html',
-                reportName: 'Trivy Vulnerability Security Reports'
-            ])
-        }
-        success {
-            sh './notify.sh SUCCESS "DevSecOps Pipeline" "All multi-stack images built and verified safe!"'
-        }
-        failure {
-            echo "Pipeline failed due to build errors or security policy violations."
-        }
-    }
+}
