@@ -8,17 +8,12 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Source') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('1. Secret Scanning (Gitleaks)') {
             steps {
                 script {
+                    // Added double quotes around "$(pwd)"
                     def status = sh(
-                        script: 'docker run --rm -v $(pwd):/path zricethezav/gitleaks:latest detect --source="/path" -v',
+                        script: 'docker run --rm -v "$(pwd)":/path zricethezav/gitleaks:latest detect --source="/path" -v',
                         returnStatus: true
                     )
                     if (status != 0) {
@@ -32,9 +27,9 @@ pipeline {
         stage('2. Multi-Stack Dependency Scan (Trivy SCA)') {
             steps {
                 script {
-                    // Automatically detects package-lock.json, requirements.txt, composer.lock, pom.xml
+                    // Added double quotes around "$(pwd)"
                     def status = sh(
-                        script: 'docker run --rm -v $(pwd):/root/src aquasec/trivy:latest fs --severity HIGH,CRITICAL --exit-code 1 /root/src',
+                        script: 'docker run --rm -v "$(pwd)":/root/src aquasec/trivy:latest fs --severity HIGH,CRITICAL --exit-code 1 /root/src',
                         returnStatus: true
                     )
                     if (status != 0) {
